@@ -1,24 +1,9 @@
-# Use the official Bun image
-FROM oven/bun:slim
-
-# Set working directory
+FROM oven/bun:1.3.9-slim@sha256:8ca06c7812d9050ccc4b80799685f395d6a0d051d3b7207dfd120e2b437b1ec9
 WORKDIR /app
-
-# Copy package files first for better caching
-COPY package.json bun.lock* ./
-
-# Install dependencies
-RUN bun install --frozen-lockfile --production
-
-# Copy source code
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 COPY . .
-
-# Expose the port (default 3220, but configurable via PORT env var)
 EXPOSE 3220
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD bun --version > /dev/null || exit 1
-
-# Start the application
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD bun -e "if (!(await fetch('http://127.0.0.1:3220/ping')).ok) process.exit(1)"
+USER bun
 CMD ["bun", "index.ts"]
